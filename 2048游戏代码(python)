@@ -1,0 +1,182 @@
+import random
+import sys
+
+def random_2or4(usr):
+    l = usr.chessboard
+    number_2or4 = 4 if int(100 * random.random()) > 66 else 2
+    try:
+        coordinate = random.choice([(i,j) for i in range(4) for j in range(4) if l[i][j] == 0])
+        l[coordinate[0]][coordinate[1]] = number_2or4
+    except:
+        if game_over(usr.chessboard):
+            usr.los = True
+
+def game_over(l = []):
+    for i in range(4):
+        for j in range(4):
+            try:
+                if l[i][j] == l[i][j+1] :
+                    return False
+            except:
+                pass
+            try:
+                if l[i][j] == l[i+1][j]:
+                    return False
+            except:
+                pass
+    return True
+
+def zero_clear(l = []):
+    while True:
+        try:
+            l.remove(0)
+        except ValueError:
+            break
+
+def drow_plan(usr):
+    l = usr.chessboard
+    print("分数:%d"%usr.score)
+    for i in range(4):
+        print(' -'*10)
+        print('|',end='')
+        for j in range(4):
+            s = ''
+            if l[i][j] == 0 :
+                s = ' '
+            else:
+                s = str(l[i][j])
+            print("%s|"%s.center(4),end = '')
+        # print("|%s|%s|%s|%s|"%(str(l[i][0]).center(4),str(l[i][1]).center(4),
+        #                         str(l[i][2]).center(4),str(l[i][3]).center(4)))
+        print()
+    print(' -'*10)
+
+def move_left(usr):
+    l = usr.chessboard
+    for i in range(4):
+        zero_clear(l[i])
+        tmp,j = 0,0
+        lenth = lenth2 = len(l[i])
+        while True:
+            if j >= lenth:
+                break
+            if j == lenth - 1:
+                l[i][tmp] = l[i][j]
+                break
+            if l[i][j] == l[i][j+1]:
+                l[i][tmp] = l[i][j] + l[i][j+1]
+                if l[i][tmp] == 2048:
+                    usr.win = True
+                usr.score += l[i][tmp]
+                lenth2 -= 1
+                j += 2
+            else:
+                l[i][tmp] = l[i][j]
+                j += 1
+            tmp += 1
+        zero_len = 4 - lenth2
+        l[i][lenth2:] = [0]*zero_len
+            
+def move_right(usr):
+    l = usr.chessboard
+    for i in range(4):
+        zero_clear(l[i])
+        lenth = len(l[i])
+        tmp = j = lenth - 1
+        while True:
+            if j < 0:
+                break
+            if j == 0:
+                l[i][tmp] = l[i][j]
+                break
+            if l[i][j] == l[i][j-1]:
+                l[i][tmp] = l[i][j] + l[i][j-1]
+                if l[i][tmp] == 2048:
+                    usr.win = True
+                usr.score += l[i][tmp]
+                lenth -= 1
+                j -= 2
+            else:
+                l[i][tmp] = l[i][j]
+                j -= 1
+            tmp -= 1
+        l[i] = l[i][-lenth:]
+        zero_len = 4 - len(l[i])
+        l[i][:0] += [0]*zero_len
+        l[i] = l[i][:4]
+
+def move_up(usr):
+    l = usr.chessboard
+    tmp = UsrInfo()
+    tmp.score = usr.score
+    for i in range(4):
+        for j in range(4):
+            tmp.chessboard[j][i] = l[i][j]
+    move_left(tmp)
+    usr.score = tmp.score
+    usr.win = tmp.win
+    usr.los = tmp.los
+    for i in range(4):
+        for j in range(4):
+            l[i][j] = tmp.chessboard[j][i]
+
+def move_down(usr):
+    l = usr.chessboard
+    tmp = UsrInfo()
+    for i in range(4):
+        for j in range(4):
+            tmp.chessboard[j][i] = l[i][j]
+    move_right(tmp)
+    usr.score = tmp.score
+    usr.win = tmp.win
+    usr.los = tmp.los
+    for i in range(4):
+        for j in range(4):
+            l[i][j] = tmp.chessboard[j][i]
+
+class UsrInfo:
+    def __init__(self):
+        self.chessboard = [[0]*4, [0]*4, [0]*4, [0]*4]
+        random_2or4(self)
+        random_2or4(self)
+        self.score = 0
+        self.los = False
+        self.win = False
+    def drow(self):
+        drow_plan(self)
+
+def usr_action():
+    usr = UsrInfo()
+    usr.drow()
+    while True:
+        if usr.los:
+            print("----Game Over!!!-----")
+            action = input("[r:restar] [q:exit]")
+        elif usr.win:
+            print("----You Win!!!-----")
+            action = input("[r:restar] [q:exit]")
+        else:
+            action = input("")
+        if action == 'w':
+            move_up(usr)
+        elif action == 'a':
+            move_left(usr)
+        elif action == 'd':
+            move_right(usr)
+        elif action == 's':
+            move_down(usr)
+        elif action == 'r':
+            return True
+        elif action == 'q':
+            return False
+        else:
+            continue
+        random_2or4(usr)
+        drow_plan(usr)
+    
+while True:
+    if usr_action():
+        pass
+    else:
+        print("-----游戏退出！----")
+        break
